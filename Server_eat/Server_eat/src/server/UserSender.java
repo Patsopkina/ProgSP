@@ -1,34 +1,28 @@
 package server;
 
-import dto.AuthRequest;
-import dto.AuthResponse;
-import  dto.KitchenStatusRequest;
-import  dto.KitchenStatusResponse;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 public class UserSender {
-    public static AuthResponse sendAuthRequest(String command, String login, String password) {
-        try (Socket socket = new Socket("localhost", 8080)) {  // Создаём сокет для подключения к серверу
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+    public static String sendCommand(String command) {
+        try (Socket socket = new Socket("localhost", 8080)) {
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            // Формируем запрос
-            AuthRequest request = new AuthRequest(command, login, password);
-            out.writeObject(request);
-            out.flush();
-
-            // Получаем ответ от сервера
-            Object responseObj = in.readObject();
-            if (responseObj instanceof AuthResponse response) {
-                return response;  // Если получили объект AuthResponse, возвращаем его
-            } else {
-                return new AuthResponse(false, "Неверный ответ сервера", null);  // В случае ошибки
-            }
-
-        } catch (IOException | ClassNotFoundException e) {
+            out.println(command);  // Отправка команды на сервер
+            String response = in.readLine();  // Получаем ответ от сервера
+            System.out.println(response);
+            System.out.println(in.lines().toString());
+            System.out.println(out.toString());
+            return response;
+        } catch (IOException e) {
             e.printStackTrace();
-            return new AuthResponse(false, "Ошибка соединения", null);  // Если ошибка при соединении
+            return "Ошибка соединения";
         }
     }
 }
+
+

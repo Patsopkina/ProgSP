@@ -1,16 +1,18 @@
 package model;
 
-import java.io.Serializable;
 
-public class MenuItem implements Serializable {
-    private static final long serialVersionUID = 1L;
+
+public class MenuItem  {
+
     private int id;
     private String name;
     private double price;
     private boolean available;
     private String description;
-
-
+ public MenuItem(){}
+    public MenuItem(int id) {
+        this.id = id;
+    }
     public MenuItem(int id, String name, String description, double price, boolean available) {
         this.id = id;
         this.name = name;

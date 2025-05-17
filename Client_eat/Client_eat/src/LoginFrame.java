@@ -1,16 +1,15 @@
+import db.DataBase;
+import server.UserSender;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import db.DataBase;
-import  dto.AuthResponse;
-import  server.UserSender;
+
 
 public class LoginFrame extends JFrame {
     private JTextField loginField;
     private JPasswordField passwordField;
     private JButton loginButton, registerButton;
 
-    public LoginFrame(DataBase dbManager) {
+    public LoginFrame (DataBase dbManager) {
         setTitle("Авторизация");
         setSize(300, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -36,36 +35,46 @@ public class LoginFrame extends JFrame {
     private void handleAuth(String commandType, DataBase dbManager) {
         String login = loginField.getText();
         String password = new String(passwordField.getPassword());
-
         if (login.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Поля не должны быть пустыми!");
             return;
         }
 
-        // Используем новую архитектуру
-        AuthResponse response = UserSender.sendAuthRequest(commandType, login, password);
+        if (dbManager.isUserBlocked(login)) {
+            JOptionPane.showMessageDialog(this, "Ваша учетная запись заблокирована. Обратитесь к администратору.");
+            return;
+        }
 
-        if (response != null && response.isSuccess()) {
-            String role = response.getRole();
-            JOptionPane.showMessageDialog(this, response.getMessage());
+        String role = dbManager.getUserRoleByLogin(login);
+        System.out.println(role);
+        String command = commandType + ":" + login + ":" + password;
+        String response = UserSender.sendCommand(command);
+        System.out.println(command);
+        System.out.println(response);
 
+        if (response.startsWith("SUCCESS")) {
+            JOptionPane.showMessageDialog(this, "Успешно!");
             switch (role) {
-                case "EMPLOYEE": new EmployeeFrame().setVisible(true); break;
-                case "ADMIN": new AdminFrame().setVisible(true); break;
-                case "MANAGER": new ManagerFrame().setVisible(true); break;
+                case "EMPLOYEE":
+                    new EmployeeFrame(login).setVisible(true);
+                    break;
+                case "ADMIN":
+                    new AdminFrame().setVisible(true);
+                    break;
+                case "MANAGER":
+                    new ManagerFrame().setVisible(true);
+                    break;
                 default: JOptionPane.showMessageDialog(this, "Неизвестная роль: " + role);
             }
-
-            this.dispose(); // Закрываем окно авторизации
-        } else if (response != null) {
-            JOptionPane.showMessageDialog(this, response.getMessage());
+            // Закрытие окна авторизации
+            this.dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Ошибка соединения.");
+            JOptionPane.showMessageDialog(this, "Ошибка: " + response);
         }
     }
-
     public static void main(String[] args) {
         DataBase dbManager = new DataBase();
         SwingUtilities.invokeLater(() -> new LoginFrame(dbManager).setVisible(true));
     }
 }
+

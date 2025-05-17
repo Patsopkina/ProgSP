@@ -3,9 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.io.Serializable;
-public class Diet implements Serializable  {
-    private static final long serialVersionUID = 1L;
+
+public class Diet   {
+
     private int id;
     private String name;
     private List<MenuItem> menuItems;
